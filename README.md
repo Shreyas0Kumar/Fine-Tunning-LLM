@@ -1,103 +1,94 @@
-# Guide to Fine-Tuning LLaMA 3.1 on ORACC Cuneiform Corpus
+# ORACC LLaMA Fine-Tuning Project
 
-This guide will walk you through the process of fine-tuning the Meta-Llama-3.1-8B-Instruct model on the Open Richly Annotated Cuneiform Corpus (ORACC) to create a model that understands and can work with Akkadian, Sumerian, and other ancient languages.
+This project fine-tunes the Meta-Llama-3.1-8B-Instruct model on the Open Richly Annotated Cuneiform Corpus (ORACC) to create a language model capable of understanding, translating, and generating ancient cuneiform texts.
 
-## 1. Environment Setup
+## Project Overview
 
-First, set up a Python environment with the necessary dependencies:
+The Open Richly Annotated Cuneiform Corpus (ORACC) brings together the work of several Assyriological projects to publish online editions of cuneiform texts. This project leverages this corpus to fine-tune LLaMA 3.1, enabling advanced NLP capabilities for Akkadian, Sumerian, and other ancient Mesopotamian languages.
 
-```bash
-# Create a virtual environment
-python -m venv oracc-env
-source oracc-env/bin/activate  # On Windows: oracc-env\Scripts\activate
+## Features
 
-# Install dependencies
-pip install -r requirements.txt
-```
+- Dataset preparation from VRT (Corpus Workbench Vertical) files
+- Parameter-efficient fine-tuning using LoRA (Low-Rank Adaptation)
+- Instruction dataset creation for various cuneiform text tasks
+- Support for translation, analysis, and text completion
 
-Create a `requirements.txt` file with:
+## Directory Structure
 
 ```
-torch>=2.0.0
-transformers>=4.30.0
-datasets>=2.12.0
-accelerate>=0.20.0
-bitsandbytes>=0.39.0
-huggingface-hub>=0.15.0
-tensorboard>=2.12.0
-peft>=0.4.0
-sentencepiece>=0.1.99
-pyyaml>=6.0
-tqdm>=4.65.0
-pandas>=1.5.0
+FINE-TUNNING-LLM/
+├── data/                      # Raw ORACC VRT files
+│   ├── oracc_cams.vrt
+│   ├── oracc_dcclt.vrt
+│   ├── oracc_other.vrt
+│   ├── oracc_ribo.vrt
+│   ├── oracc_rinap.vrt
+│   └── oracc_saao.vrt
+├── processed_oracc/           # Processed dataset (created during execution)
+├── oracc_instructions/        # Instruction dataset (created during execution)
+├── fine_tuned_oracc_llama/    # Output directory for the fine-tuned model
+├── config.yaml                # Configuration file
+├── oracc-dataset-prep.py      # Dataset preparation script
+├── oracc-finetuning.py        # Main fine-tuning script
+├── peft-finetuning.py         # Alternative PEFT fine-tuning implementation
+├── llama-finetuning.py        # Base LLaMA fine-tuning script
+├── requirements.txt           # Python dependencies
+└── README.md                  # This file
 ```
 
-## 2. Download and Prepare the ORACC Dataset
+## Prerequisites
 
-The ORACC dataset is available from the Clarino repository. You need to download the VRT files:
+- Python 3.8+
+- PyTorch 2.0+
+- CUDA-compatible GPU with at least 16GB VRAM
+- Access to the Meta-Llama-3.1-8B-Instruct model on Hugging Face
+- Hugging Face account with appropriate access token
 
-```bash
-# Create directories
-mkdir -p oracc_files
-mkdir -p processed_oracc
-mkdir -p oracc_instructions
+## Installation
 
-# Download the VRT files
-# You can either download them manually from the website or use wget/curl
-# For example:
-# wget -P oracc_files https://clarino.uib.no/comedi/download/oracc_cams.vrt
-# wget -P oracc_files https://clarino.uib.no/comedi/download/oracc_dcclt.vrt
-# wget -P oracc_files https://clarino.uib.no/comedi/download/oracc_other.vrt
-# wget -P oracc_files https://clarino.uib.no/comedi/download/oracc_ribo.vrt
-# wget -P oracc_files https://clarino.uib.no/comedi/download/oracc_rinap.vrt
-# wget -P oracc_files https://clarino.uib.no/comedi/download/oracc_saao.vrt
-```
+1. Clone this repository:
+   ```bash
+   git clone https://github.com/yourusername/FINE-TUNNING-LLM.git
+   cd FINE-TUNNING-LLM
+   ```
 
-## 3. Process the Dataset
+2. Create a virtual environment:
+   ```bash
+   python -m venv oracc-env
+   source oracc-env/bin/activate  # On Windows: oracc-env\Scripts\activate
+   ```
 
-Run the dataset preparation script to convert the VRT files into a format suitable for fine-tuning:
+3. Install dependencies:
+   ```bash
+   pip install -r requirements.txt
+   ```
 
-```bash
-python oracc-dataset-prep.py
-```
+4. Create a configuration file:
+   ```bash
+   cp config.yaml.example config.yaml
+   # Edit config.yaml with your Hugging Face token and settings
+   ```
 
-This script:
-1. Parses the VRT files to extract text and metadata
-2. Creates a regular text dataset
-3. Creates an instruction dataset with various prompts for fine-tuning
+## Dataset Preparation
 
-## 4. Update Configuration
+1. Obtain the ORACC VRT files from [Clarino](https://clarino.uib.no/comedi/editor/lb-2018071121)
+2. Place the VRT files in the `data` directory
+3. Run the dataset preparation script:
+   ```bash
+   python oracc-dataset-prep.py
+   ```
 
-Before running the fine-tuning:
+## Fine-Tuning
 
-1. Open the `oracc_config.yaml` file
-2. Replace `your_huggingface_token` with your actual Hugging Face token
-3. Adjust training parameters based on your hardware capabilities
+1. Update the configuration file with your specific settings
+2. Run the fine-tuning script:
+   ```bash
+   python oracc-finetuning.py
+   ```
 
-## 5. Run the Fine-Tuning
+## Usage
 
-```bash
-python oracc-finetuning.py
-```
-
-This script uses LoRA (Low-Rank Adaptation) for efficient fine-tuning. The process might take several hours to complete, depending on your hardware.
-
-## 6. Hardware Requirements
-
-For fine-tuning with LoRA on LLaMA 3.1 8B:
-- GPU with at least 16GB VRAM (e.g., NVIDIA A100, V100, or RTX 4090)
-- 32GB+ system RAM
-- About 50GB of free disk space
-
-## 7. Using the Fine-Tuned Model
-
-After training, you can use the model to:
-- Translate ancient texts
-- Analyze cuneiform inscriptions
-- Generate text in Akkadian/Sumerian style
-- Answer questions about ancient Mesopotamian cultures
-
-Example usage:
+After fine-tuning, you can use the model for:
 
 ```python
 from transformers import AutoModelForCausalLM, AutoTokenizer
@@ -127,66 +118,33 @@ response = tokenizer.decode(outputs[0], skip_special_tokens=True)
 print(response)
 ```
 
-## 8. Customization Options
+## Customization
 
-You can customize the fine-tuning process by:
+- Modify `oracc-dataset-prep.py` to change how datasets are prepared
+- Adjust LoRA parameters in `config.yaml` for different fine-tuning behavior
+- Change training hyperparameters in `config.yaml` to match your GPU resources
 
-1. **Modifying the instruction templates**:
-   - Edit the `create_instruction_dataset` function in `oracc-dataset-prep.py`
-   - Add more domain-specific prompts
+## License
 
-2. **Adjusting LoRA parameters**:
-   - Change the rank (`r`) and alpha parameters
-   - Target different modules in the model
+This project is licensed under the MIT License - see the LICENSE file for details.
 
-3. **Training parameters**:
-   - Increase/decrease epochs
-   - Adjust learning rate
-   - Change batch size and gradient accumulation steps
+## Acknowledgements
 
-## 9. Understanding the VRT Format
+- [Open Richly Annotated Cuneiform Corpus (ORACC)](http://oracc.museum.upenn.edu/)
+- [Meta LLaMA Team](https://ai.meta.com/llama/)
+- [Hugging Face Transformers](https://huggingface.co/docs/transformers/index)
+- [PEFT Library](https://github.com/huggingface/peft)
 
-VRT (Corpus Workbench Vertical) files contain token-per-line information with annotations:
+## Citation
+
+If you use this work in your research, please cite:
 
 ```
-<text id="oracc.cams.P295869" language="Akkadian" period="Old Babylonian">
-<s>
-awīlu    N    man
-kīma    CONJ    like
-</s>
-</text>
+@misc{oracc-llama-finetuning,
+  author = {Your Name},
+  title = {ORACC LLaMA Fine-Tuning Project},
+  year = {2025},
+  publisher = {GitHub},
+  url = {https://github.com/yourusername/FINE-TUNNING-LLM}
+}
 ```
-
-The dataset preparation script extracts:
-- Text content
-- Metadata (language, period, etc.)
-- Annotations when available
-
-## 10. Troubleshooting
-
-If you encounter issues:
-
-1. **Out of Memory errors**:
-   - Reduce batch size
-   - Increase gradient accumulation steps
-   - Use `load_in_4bit=True` instead of `load_in_8bit=True`
-   - Reduce sequence length
-
-2. **CUDA issues**:
-   - Ensure you have the correct CUDA toolkit installed
-   - Update GPU drivers
-
-3. **Slow training**:
-   - Enable mixed precision training
-   - Use a smaller subset of the data for testing
-
-4. **Poor results**:
-   - Increase the number of epochs
-   - Adjust learning rate
-   - Use more instruction examples
-
-## 11. Additional Resources
-
-- [ORACC Website](http://oracc.museum.upenn.edu/) - The official ORACC project site
-- [Hugging Face PEFT Documentation](https://huggingface.co/docs/peft/index) - For Parameter-Efficient Fine-Tuning details
-- [Transformers Documentation](https://huggingface.co/docs/transformers/index) - For more options and customizations
