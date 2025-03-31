@@ -17,7 +17,7 @@ The Open Richly Annotated Cuneiform Corpus (ORACC) brings together the work of s
 
 ```
 FINE-TUNNING-LLM/
-├── data/                      # Raw ORACC VRT files
+├── oracc_files/                      # Raw ORACC VRT files
 │   ├── oracc_cams.vrt
 │   ├── oracc_dcclt.vrt
 │   ├── oracc_other.vrt
